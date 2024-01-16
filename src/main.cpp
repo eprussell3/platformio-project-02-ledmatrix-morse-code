@@ -1,61 +1,64 @@
-// Display a message on the LED matrix and "send" morse code value via onboard LED
+// Display a message on the LED matrix and "send" morse code value via onboard LED and active buzzer
 #include <Arduino.h>
 #include <ArduinoGraphics.h>
 #include <Arduino_LED_Matrix.h>
 
 ArduinoLEDMatrix matrix; 
 
+//-----------------------------------
 // FUNCTION DECLARATIONS
 
 // Function to display a specific string (non-scrolling)
 void displayStr(String);
+
 // "Send" character as morse code
 void sendCharacter(String);
 
+//-----------------------------------
 // Globals
-int buzzerPin = 5; // Pin Active buzzer is connected to on the Ditital PWM
-int dot = 50;      // Length of morse code "Dot"
+int buzzerPin = 5;  // Pin Active buzzer is connected to on the Ditital PWM
+int dot = 50;       // Length of morse code "Dot"
 int dash = dot * 3; // Length of morse code "Dash"
 int del = dot;      // Delay between dots/dashes
 String alphanumericString = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789?!.,;:+-/=";
 int morseCodes[46][6] = {
-  {dot, dash, 0, 0, 0},            // A
-  {dash, dot, dot, dot, 0, 0},  // B
-  {dash, dot, dash, dot, 0, 0}, // C
-  {dash, dot, dot, 0, 0, 0},       // D
-  {dot, 0, 0, 0, 0, 0},                  // E
-  {dot, dot, dash, dot, 0, 0},  // F
-  {dash, dash, dot, 0, 0, 0},      // G
-  {dot, dot, dot, dot, 0, 0},   // H
+  {dot, dash, 0, 0, 0},               // A
+  {dash, dot, dot, dot, 0, 0},        // B
+  {dash, dot, dash, dot, 0, 0},       // C
+  {dash, dot, dot, 0, 0, 0},          // D
+  {dot, 0, 0, 0, 0, 0},               // E
+  {dot, dot, dash, dot, 0, 0},        // F
+  {dash, dash, dot, 0, 0, 0},         // G
+  {dot, dot, dot, dot, 0, 0},         // H
   {dot, dot, 0, 0, 0, 0},             // I
-  {dot, dash, dash, dash, 0, 0},  // J
-  {dash, dot, dash, 0, 0, 0},      // K
-  {dot, dash, dot, dot, 0, 0},  // L
+  {dot, dash, dash, dash, 0, 0},      // J
+  {dash, dot, dash, 0, 0, 0},         // K
+  {dot, dash, dot, dot, 0, 0},        // L
   {dash, dash, 0, 0, 0, 0},           // M
   {dash, dot, 0, 0, 0, 0},            // N
-  {dash, dash, dash, 0, 0, 0},     // O
-  {dot, dash, dash, dot, 0, 0}, // P
-  {dash, dash, dot, dash, 0, 0},  // Q
-  {dot, dash, dot, 0, 0, 0},       // R
-  {dot, dot, dot, 0, 0, 0},        // S
-  {dash, 0, 0, 0, 0, 0},                 // T
-  {dot, dot, dash, 0, 0, 0},       // U
-  {dot, dot, dot, dash, 0, 0},  // V
-  {dot, dash, dash, 0, 0, 0},      // W
-  {dash, dot, dot, dash, 0, 0}, // X
-  {dash, dot, dash, dash, 0, 0}, // Y
-  {dash, dash, dot, dot, 0, 0},  // Z
-  {dash, dash, dash, dash, dash, 0}, // 0
-  {dot, dash, dash, dash, dash, 0},  // 1
-  {dot, dot, dash, dash, dash, 0},   // 2
-  {dot, dot, dot, dash, dash, 0},    // 3
-  {dot, dot, dot, dot, dash, 0},     // 4
-  {dot, dot, dot, dot, dot, 0},      // 5
-  {dash, dot, dot, dot, dot, 0},     // 6
-  {dash, dash, dot, dot, dot, 0},    // 7
-  {dash, dash, dash, dot, dot, 0},   // 8
+  {dash, dash, dash, 0, 0, 0},        // O
+  {dot, dash, dash, dot, 0, 0},       // P
+  {dash, dash, dot, dash, 0, 0},      // Q
+  {dot, dash, dot, 0, 0, 0},          // R
+  {dot, dot, dot, 0, 0, 0},           // S
+  {dash, 0, 0, 0, 0, 0},              // T
+  {dot, dot, dash, 0, 0, 0},          // U
+  {dot, dot, dot, dash, 0, 0},        // V
+  {dot, dash, dash, 0, 0, 0},         // W
+  {dash, dot, dot, dash, 0, 0},       // X
+  {dash, dot, dash, dash, 0, 0},      // Y
+  {dash, dash, dot, dot, 0, 0},       // Z
+  {dash, dash, dash, dash, dash, 0},  // 0
+  {dot, dash, dash, dash, dash, 0},   // 1
+  {dot, dot, dash, dash, dash, 0},    // 2
+  {dot, dot, dot, dash, dash, 0},     // 3
+  {dot, dot, dot, dot, dash, 0},      // 4
+  {dot, dot, dot, dot, dot, 0},       // 5
+  {dash, dot, dot, dot, dot, 0},      // 6
+  {dash, dash, dot, dot, dot, 0},     // 7
+  {dash, dash, dash, dot, dot, 0},    // 8
   {dash, dash, dash, dash, dot, 0},   // 9
-  {dot, dot, dash, dash, dot, dot},  // ?
+  {dot, dot, dash, dash, dot, dot},   // ?
   {dash, dot, dash, dot, dash, dash}, // !
   {dot, dash, dot, dash, dot, dash},  // .
   {dash, dash, dot, dot, dash, dash}, // ,
@@ -64,9 +67,10 @@ int morseCodes[46][6] = {
   {dot, dash, dot, dash, dot, 0},     // +
   {dash, dot, dot, dot, dot, dash},   // -
   {dash, dot, dot, dash, dot, 0},     // /
-  {dash, dot, dot, dot, dash, 0}     // =
+  {dash, dot, dot, dot, dash, 0}      // =
 };
 
+//-----------------------------------
 // Initialization
 void setup() {
     // Lnitialize digital pin LED_BUILTIN as an output.
@@ -98,9 +102,10 @@ void setup() {
   digitalWrite(buzzerPin, LOW);  // Turn off the buzzer
 }
 
+//-----------------------------------
 // Main
 void loop() {
-  String myMessage = String("Hello World!");
+  String myMessage = String("It is as easy as 1 2 3"); // Message to send
   for (int i = 0; i < myMessage.length(); i++){
     String currentChar = String(myMessage.substring(i,i+1));
     currentChar.toUpperCase();
@@ -119,7 +124,8 @@ void loop() {
   delay(1000);
 }
 
-// put function definitions here:
+//-----------------------------------
+// FUNCTION DEFINITIONS
 
 // Display a message on the LED matrix
 void displayStr(String message){
@@ -140,7 +146,7 @@ void sendCharacter(String mcChar){
     int dotOrDash = morseCodes[mcIndex][i];
     if (dotOrDash <= 0) {return;}
     digitalWrite(LED_BUILTIN, HIGH);  // turn the LED on (HIGH is the voltage level)
-    digitalWrite(buzzerPin, HIGH);   // turn on the buzzer
+    digitalWrite(buzzerPin, HIGH);    // turn on the buzzer
     delay(dotOrDash);                 // wait for dot or dash length
     digitalWrite(LED_BUILTIN, LOW);   // turn the LED off by making the voltage LOW
     digitalWrite(buzzerPin, LOW);     // turn off the buzzer
